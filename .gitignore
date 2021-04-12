@@ -4,3 +4,5 @@ node_modules
 .idea
 build
 contracts/artifacts
+AnnuaireISEP2021_2025.csv
+users_mails_and_codes

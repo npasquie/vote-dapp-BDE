@@ -4,4 +4,4 @@
 
 ## Deploy
 
-`node deployBallot.js <localhost/rinkeby>`
+`truffle deploy`
