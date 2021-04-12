@@ -13,12 +13,12 @@ contract BallotBDE {
     //contract variables
 
     address owner;
-    uint startTime; /* time before which no vote can be registered */
-    uint endTime; /* time after which no vote can be registered anymore,
+    uint startTime = 1618560000; /* 16 april 2021 10h CET - time before which no vote can be registered */
+    uint endTime = 1618588800; /* 16 april 2021 18h CET - time after which no vote can be registered anymore,
     based on unix epoch */
-    bool externalitiesEnabled; /* to create ballots without controversial
+    bool externalitiesEnabled = true; /* to create ballots without controversial
     externalities */
-    bytes32[] candidateNames;
+    bytes32[] candidateNames = [bytes32("Atlas"), bytes32("Overlap"), bytes32("Vote blanc")];
     mapping (bytes32 => s_candidate) m_candidates;
 
     //structs definition
@@ -29,27 +29,18 @@ contract BallotBDE {
 
     /* warning : if many candidates with the same name are sent, last one
     will overwrite the others */
-    constructor(
-        uint _startTime,
-        uint _endTime,
-        bool _externalitiesEnabled,
-        bytes32[] memory _candidateNames) public {
-        require(_startTime < _endTime, "end time of the ballot must be after the start time");
-        require(_startTime > now, "end time of the ballot must be in the future");
-        require(_endTime > now, "end time of the ballot must be in the future");
-        require(_candidateNames.length >= 2,
+    constructor() public {
+        require(startTime < endTime, "end time of the ballot must be after the start time");
+        require(startTime > now, "end time of the ballot must be in the future");
+        require(endTime > now, "end time of the ballot must be in the future");
+        require(candidateNames.length >= 2,
           "no ballot can be created with less than 2 candidates");
 
         owner = msg.sender;
-        startTime - _startTime;
-        endTime = _endTime;
-        externalitiesEnabled = _externalitiesEnabled;
-        candidateNames = new bytes32[](_candidateNames.length);
-        for (uint i = 0; i < _candidateNames.length; i++){
-            require(_candidateNames[i][0] != 0,
-              "every candidate must have a defined name");
 
-            candidateNames[i] = _candidateNames[i];
+        for (uint i = 0; i < candidateNames.length; i++){
+            require(candidateNames[i][0] != 0,
+              "every candidate must have a defined name");
         }
     }
 
