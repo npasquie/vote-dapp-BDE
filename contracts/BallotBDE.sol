@@ -13,8 +13,6 @@ contract BallotBDE {
     //contract variables
 
     address owner;
-    bytes32 name;
-    bytes32 question;
     uint startTime; /* time before which no vote can be registered */
     uint endTime; /* time after which no vote can be registered anymore,
     based on unix epoch */
@@ -32,20 +30,18 @@ contract BallotBDE {
     /* warning : if many candidates with the same name are sent, last one
     will overwrite the others */
     constructor(
-        bytes32 _name,
-        bytes32 _question,
+        uint _startTime,
         uint _endTime,
         bool _externalitiesEnabled,
         bytes32[] memory _candidateNames) public {
-        require(! (_name[0] == 0) && ! (_question[0] == 0),
-          "name and question must be defined");
+        require(_startTime < _endTime, "end time of the ballot must be after the start time");
+        require(_startTime > now, "end time of the ballot must be in the future");
         require(_endTime > now, "end time of the ballot must be in the future");
         require(_candidateNames.length >= 2,
           "no ballot can be created with less than 2 candidates");
 
         owner = msg.sender;
-        name = _name;
-        question = _question;
+        startTime - _startTime;
         endTime = _endTime;
         externalitiesEnabled = _externalitiesEnabled;
         candidateNames = new bytes32[](_candidateNames.length);
@@ -100,14 +96,6 @@ contract BallotBDE {
 
     function getStartTime() public view returns(uint){
         return startTime;
-    }
-
-    function getName() public view returns(bytes32){
-        return name;
-    }
-
-    function getQuestion() public view returns(bytes32){
-        return question;
     }
 
     //for voters

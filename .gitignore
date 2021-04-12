@@ -3,3 +3,4 @@ chain_info.json
 node_modules
 .idea
 build
+contracts/artifacts

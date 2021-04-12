@@ -2,6 +2,7 @@
   "name": "Election BDE ISEP avril 2021",
   "question": "Quel BDE voulez-vous pour 2021-2022 ?",
   "externalitiesEnabled": true,
+  "startDate": "April 16, 2021 08:00:00",
   "endDate": "April 16, 2021 17:30:00",
   "candidateNames" : ["Atlas","Overlap","Vote blanc"]
 }
