@@ -1,0 +1,9 @@
+{
+  "name": "vote-dapp-BDE",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "web3": "^1.3.5"
+  }
+}
