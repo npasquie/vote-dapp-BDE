@@ -17,6 +17,6 @@ function generateSecrets(data){
         tempUserStruct = {mail: mail, code: tempCode}
         allUsersData.push(tempUserStruct)
     })
-    fs.writeFile("users_mails_and_codes",JSON.stringify(allUsersData),'utf8',()=>{
+    fs.writeFile("users_mails_and_codes.json",JSON.stringify(allUsersData,null,' '),'utf8',()=>{
         console.log('done')})
 }
