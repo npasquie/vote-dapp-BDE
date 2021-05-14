@@ -1,8 +1,11 @@
 address.json
-chain_info.json
+src/chain_info.json
 node_modules
 .idea
 build
 contracts/artifacts
 AnnuaireISEP2021_2025.csv
 users_mails_and_codes
+cache
+artifacts
+mailsEtPonderation.csv
