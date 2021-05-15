@@ -1,11 +1,11 @@
 const fs = require("fs")
 
-try {
-    const data = fs.readFileSync('./mailsEtPonderation.csv', 'utf8')
-    generateSecrets(data)
-} catch (err) {
-    console.error(err)
-}
+// try {
+//     const data = fs.readFileSync('./mailsEtPonderation.csv', 'utf8')
+//     generateSecrets(data)
+// } catch (err) {
+//     console.error(err)
+// }
 
 function generateSecrets(data){
     const LEADING = 0, MEMBER = 1, LEAVING = 2 // enum-like in js
@@ -33,5 +33,7 @@ function generateSecrets(data){
             allUsersData.push(tempUserStruct)
     })
     fs.writeFile("users_mails_and_codes.json",JSON.stringify(allUsersData,null,' '),'utf8',()=>{
-        console.log('done')})
+        console.log('secrets file generated')})
 }
+
+module.exports = {generateSecrets}

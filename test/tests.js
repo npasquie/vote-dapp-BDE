@@ -4,47 +4,83 @@ const assert = require('assert')
 
 const ballotJSON = require("../artifacts/contracts/BallotGarageISEP.sol/BallotGarageISEP.json")
 
+const utils = require("../src/utils")
+
 describe("garageisep ballot test suite", function (){
     let web3
     let accounts
+    let contract
+    let time
+    let sendContrFunc = utils.sendContrFunc
+    let deployContract = utils.deployContract
+    let strToBytes32 = utils.strToBytes32
 
     this.timeout(20000)
 
     before(async function (){
         hre.run("node")
-        await delay(3500)
+        await delay(500)
         web3 = new Web3("http://localhost:8545")
         accounts = await web3.eth.getAccounts()
     })
 
     it("should deploy da contract", async function () {
-        let now = Math.floor(Date.now()/1000)
-        console.log([now + 3, now + 100,
-            web3.eth.abi.encodeParameter('bytes32[]',[
-                web3.utils.toHex('candidatA'),
-                web3.utils.toHex('candidatB'),
-                web3.utils.toHex('candidatC')
-            ])
-        ])
-        let deployedAt = await deployContract(ballotJSON, accounts[0], web3, [now + 3, now + 100,
-            web3.eth.abi.encodeParameter('bytes32[]',[
-                web3.utils.toHex('candidatA'),
-                web3.utils.toHex('candidatB'),
-                web3.utils.toHex('candidatC')
-            ])
-        ])
-        console.log(deployedAt)
+        time = 2000000000
+        await hre.network.provider.request({
+            method:"evm_setNextBlockTimestamp",
+            params: [time]
+        })
+        contract = await deployContract(ballotJSON, accounts[0], web3, [time + 10, time + 100,
+            [
+                strToBytes32('candidatA', web3),
+                strToBytes32('candidatB', web3),
+                strToBytes32('candidatC', web3)
+            ]])
+        await hre.network.provider.request({method:"evm_mine"})
+    })
+
+    it("should cast a vote", async function () {
+        time += 20
+        await hre.network.provider.request({
+            method:"evm_setNextBlockTimestamp",
+            params: [time]
+        })
+        await sendContrFunc(contract.methods.vote(strToBytes32('candidatA', web3),0),accounts[0])
+        let scoreA = await contract.methods.getCandidateScore(strToBytes32('candidatA', web3)).call()
+        assert(scoreA == 55 * (10 ** 18) /100) // keep non strict comparison
+    })
+
+    it("should cast some other votes", async function () {
+        await sendContrFunc(contract.methods.vote(strToBytes32('candidatB', web3),1),accounts[0])
+        await sendContrFunc(contract.methods.vote(strToBytes32('candidatC', web3),2),accounts[0])
+        await sendContrFunc(contract.methods.vote(strToBytes32('candidatA', web3),1),accounts[0])
+        // 4 votes in total
+        let scoreA = await contract.methods.getCandidateScore(strToBytes32('candidatA', web3)).call()
+        let scoreB = await contract.methods.getCandidateScore(strToBytes32('candidatB', web3)).call()
+        let scoreC = await contract.methods.getCandidateScore(strToBytes32('candidatC', web3)).call()
+        assert.equal(parseInt(scoreB), ((35 / 2) * (10 ** 18) / 100))
+        assert.equal(parseInt(scoreA),(55 * (10 ** 18) / 100) + ((35 / 2) * (10 ** 18) /100))
+        assert.equal(parseInt(scoreC), (10 * (10 ** 18) /100))
     })
 })
 
-async function sendContrFunc(stuffToDo, from, value){
-    let gas = await stuffToDo.estimateGas({from: from, value: value})
-    return await stuffToDo.send({from: from, gas: gas + 21000, gasPrice: '30000000', value: value})
-}
-
-async function deployContract(json, from, web3, args){
-    let contract = await new web3.eth.Contract(json.abi)
-    return await sendContrFunc(contract.deploy({data:json.bytecode, arguments: args}), from)
-}
+// async function sendContrFunc(stuffToDo, from, value){
+//     let gas = await stuffToDo.estimateGas({from: from, value: value})
+//     return await stuffToDo.send({from: from, gas: gas, value: value})
+// }
+//
+// async function deployContract(json, from, web3, args){
+//     let contract = await new web3.eth.Contract(json.abi)
+//     return await sendContrFunc(contract.deploy({data:json.bytecode, arguments: args}), from)
+// }
+//
+// function strToBytes32 (str, web3) {
+//     let ret
+//     ret = web3.utils.utf8ToHex(str)
+//     ret = web3.utils.hexToBytes(ret)
+//     ret = ret.concat(new Array(32 - ret.length).fill(0))
+//     ret = web3.utils.bytesToHex(ret)
+//     return ret.slice(0, 32)
+// }
 
 const delay = ms => new Promise(res => setTimeout(res, ms));

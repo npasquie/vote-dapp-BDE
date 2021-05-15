@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.4;
 
+import "hardhat/console.sol";
+
 contract BallotGarageISEP {
     uint256 constant LEADING = 0;
     uint256 constant MEMBER  = 1;
@@ -18,10 +20,9 @@ contract BallotGarageISEP {
     /* warning : if many candidates with the same name are sent, last one
     will overwrite the others */
     constructor(uint256 _startTime, uint256 _endTime, bytes32[] memory _candidateNames) {
-        require(startTime < endTime, "end time of the ballot must be after the start time");
-        require(startTime > block.timestamp, "end time of the ballot must be in the future");
-        require(endTime > block.timestamp, "end time of the ballot must be in the future");
-        require(candidateNames.length >= 2,
+        require(_startTime < _endTime, "end time of the ballot must be after the start time");
+        require(_endTime > block.timestamp, "end time of the ballot must be in the future");
+        require(_candidateNames.length >= 2,
           "no ballot can be created with less than 2 candidates");
 
         owner = msg.sender;
@@ -44,21 +45,25 @@ contract BallotGarageISEP {
     }
     
     function getCandidateScore(bytes32 _candidateName) public view returns(uint256){
-        // require(block.timestamp > endTime, "please wait for end of vote to see scores");
         uint256[3] memory numberOfVotesByWeight;
-        uint256 totalNumberOfVotes;
-        
+        uint256[3] memory scorePartsByWeight;
+
         for(uint256 i = 0; i < candidateNames.length; i++){
             numberOfVotesByWeight[LEADING] += candidateScores[candidateNames[i]][LEADING];
             numberOfVotesByWeight[MEMBER] += candidateScores[candidateNames[i]][MEMBER];
             numberOfVotesByWeight[LEAVING] += candidateScores[candidateNames[i]][LEAVING];
         }
-        totalNumberOfVotes = numberOfVotesByWeight[LEADING] + numberOfVotesByWeight[MEMBER] + numberOfVotesByWeight[LEAVING];
         
-        return(
-            candidateScores[_candidateName][LEADING] * (((55 * ONE / 100) * totalNumberOfVotes) / numberOfVotesByWeight[LEADING]) +
-            candidateScores[_candidateName][MEMBER] * (((35 * ONE / 100) * totalNumberOfVotes) / numberOfVotesByWeight[MEMBER]) + 
-            candidateScores[_candidateName][LEAVING] * (((10 * ONE / 100) * totalNumberOfVotes) / numberOfVotesByWeight[LEAVING]));
+        if (numberOfVotesByWeight[LEADING] > 0)
+            scorePartsByWeight[LEADING] = (ONE * 55 * candidateScores[_candidateName][LEADING]) / (100 * numberOfVotesByWeight[LEADING]);
+    
+        if (numberOfVotesByWeight[MEMBER] > 0)
+            scorePartsByWeight[MEMBER] = (ONE * 35 * candidateScores[_candidateName][MEMBER]) / (100 * numberOfVotesByWeight[MEMBER]);
+
+        if (numberOfVotesByWeight[LEAVING] > 0)
+            scorePartsByWeight[LEAVING] = (ONE * 10 * candidateScores[_candidateName][LEAVING]) / (100 * numberOfVotesByWeight[LEAVING]);
+        
+        return(scorePartsByWeight[LEADING] + scorePartsByWeight[MEMBER] + scorePartsByWeight[LEAVING]);
     }
 
     //warning: doesn't check if candidate actually exists
