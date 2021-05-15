@@ -9,16 +9,20 @@ const generator = require("./generate_secrets_from_mails")
 const fs = require("fs")
 const mailer = require("./send_emails.js")
 const data = fs.readFileSync('../mailsEtPonderation.csv', 'utf8')
+const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 generator.generateSecrets(data)
 
 async function main(){
-    let web3 = new Web3(chainInfo.localhost)
-    let accounts = await web3.eth.getAccounts()
+    let provider = new HDWalletProvider(chainInfo.private_key, chainInfo.rinkeby)
+    let web3 = new Web3(provider)
     let nowTimestamp = Math.floor(Date.now() / 1000)
     let candidateNames = []
     let voteDuration
     let voteSubject
+
+    let accounts = await web3.eth.getAccounts()
+    console.log(accounts)
     process.argv.forEach((val, index) => {
         if(index > 1){
             if(index === 2) {
@@ -32,7 +36,7 @@ async function main(){
     })
     let candidatesArg = []
     candidateNames.forEach(name => candidatesArg.push(utils.strToBytes32(name,web3)))
-    let ballot = await utils.deployContract(ballotJSON,accounts[0],web3,[nowTimestamp, nowTimestamp + voteDuration, candidatesArg])
+    let ballot = await utils.deployContract(ballotJSON,chainInfo.address,web3,[nowTimestamp, nowTimestamp + voteDuration, candidatesArg])
     let userInfos = JSON.parse(fs.readFileSync("./users_mails_and_codes.json", 'utf8'))
     let codesThatVoted = []
 
@@ -46,8 +50,8 @@ async function main(){
             tempScore = tempScore / (10 ** 18)
             scores.push({name: name, score: tempScore})
         }
-        let returnedString = "scores actuels : \n"
-        scores.forEach(score => returnedString += score.name + " : " + score.score + "\n")
+        let returnedString = `<h1>Vote-dapp : ${voteSubject}</h1><br><br>scores actuels : <br>\n`
+        scores.forEach(score => returnedString += score.name + " : " + score.score + "<br>\n")
         if (Math.floor(Date.now() / 1000) < nowTimestamp + voteDuration) {
             returnedString += "attention : les votes ne sont pas encore clos"
         } else {
@@ -71,8 +75,8 @@ async function main(){
         }
         codesThatVoted.push(user.code)
         try {
-            receipt = await utils.sendContrFunc(ballot.methods.vote(utils.strToBytes32(vote,web3),parseInt(user.weightCode)),accounts[0])
-            res.send('Vote envoyé à la blockchain. hash de la transaction : ' + receipt.transactionHash)
+            receipt = await utils.sendContrFunc(ballot.methods.vote(utils.strToBytes32(vote,web3),parseInt(user.weightCode)),chainInfo.address)
+            res.send('Vote envoyé à la blockchain. <br>\n hash de la transaction : ' + receipt.transactionHash)
         } catch (err) {
             res.send('error : ' + err)
         }

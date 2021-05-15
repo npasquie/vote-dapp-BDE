@@ -1,6 +1,6 @@
 async function sendContrFunc(stuffToDo, from, value){
     let gas = await stuffToDo.estimateGas({from: from, value: value})
-    return await stuffToDo.send({from: from, gas: gas, value: value})
+    return await stuffToDo.send({from: from, gas: gas, value: value, gasPrice: (15000000000).toString()}) // 15 Gwei gas price
 }
 
 async function deployContract(json, from, web3, args){

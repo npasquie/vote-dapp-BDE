@@ -19,6 +19,7 @@ async function sendMails(subject, candidateNames, userInfos){
                 pour voter, cliquez sur le lien de votre choix, attention, aucune confirmation ne vous sera demandée et le vote est définitif.\n
                 ces liens contiennent votre code votant confidentiel, ne les partagez à personne.\n`
         candidateNames.forEach(name => {
+            // todo : put link
             text += name + ` : .../vote/${name}/${user.code}$\n`
         })
         mailOptions = {
@@ -35,8 +36,6 @@ async function sendMails(subject, candidateNames, userInfos){
         //         console.log('Email sent: ' + info.response); // ca marche :)
         //     }
         // })
-
-        console.log(mailOptions)
     }
 }
 
