@@ -76,7 +76,7 @@ async function main(){
         codesThatVoted.push(user.code)
         try {
             receipt = await utils.sendContrFunc(ballot.methods.vote(utils.strToBytes32(vote,web3),parseInt(user.weightCode)),chainInfo.address)
-            res.send('Vote envoyé à la blockchain. <br>\n hash de la transaction : ' + receipt.transactionHash)
+            res.send('Vote envoyé à la blockchain. <br>\n pour consulter la transaction : https://rinkeby.etherscan.io/tx/' + receipt.transactionHash)
         } catch (err) {
             res.send('error : ' + err)
         }
