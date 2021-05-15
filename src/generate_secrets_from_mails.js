@@ -1,12 +1,5 @@
 const fs = require("fs")
 
-// try {
-//     const data = fs.readFileSync('./mailsEtPonderation.csv', 'utf8')
-//     generateSecrets(data)
-// } catch (err) {
-//     console.error(err)
-// }
-
 function generateSecrets(data){
     const LEADING = 0, MEMBER = 1, LEAVING = 2 // enum-like in js
     let mail, weighting, tempUserStruct, tempCode, tempWeightCode
