@@ -1,5 +1,3 @@
-const fs = require("fs")
-
 function generateSecrets(data){
     const LEADING = 0, MEMBER = 1, LEAVING = 2 // enum-like in js
     let mail, weighting, tempUserStruct, tempCode, tempWeightCode
@@ -30,9 +28,8 @@ function generateSecrets(data){
         if(mail !== '') // prevent last empty line to generate a possible vote
             allUsersData.push(tempUserStruct)
     })
-    fs.writeFile("users_mails_and_codes.json",JSON.stringify(allUsersData,null,' '),'utf8',()=>{
-        console.log('secrets file generated')})
-    return nbsOfVoters
+        console.log('secrets file generated')
+    return {nbsOfVoters: nbsOfVoters, allUsersData:allUsersData}
 }
 
 module.exports = {generateSecrets}

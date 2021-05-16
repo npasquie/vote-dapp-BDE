@@ -12,7 +12,7 @@ const data = fs.readFileSync('../mailsEtPonderation.csv', 'utf8')
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const prodMode = false
 
-let nbsOfVoters = generator.generateSecrets(data)
+let {nbsOfVoters,allUsersData} = generator.generateSecrets(data)
 
 async function main(){
     let provider = prodMode ? new HDWalletProvider(chainInfo.private_key, chainInfo.rinkeby) : "http://localhost:8545"
@@ -41,7 +41,7 @@ async function main(){
         }
     })
     let candidatesArg = []
-    let userInfos = JSON.parse(fs.readFileSync("./users_mails_and_codes.json", 'utf8'))
+    let userInfos = allUsersData
 
     candidateNames.forEach(name => candidatesArg.push(utils.strToBytes32(name,web3)))
     let ballot = await utils.deployContract(ballotJSON,signerAccount,web3,[nowTimestamp, nowTimestamp + voteDuration, candidatesArg, nbsOfVoters])
