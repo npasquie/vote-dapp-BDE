@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 const mailConfig = require("./mailConfig.json")
 
-async function sendMails(subject, candidateNames, userInfos){
+async function sendMails(subject, candidateNames, userInfos, prodMode){
     let mailOptions
     let text
     let transporter = nodemailer.createTransport({
@@ -28,14 +28,17 @@ async function sendMails(subject, candidateNames, userInfos){
             text: text
         }
 
-        await transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-            } else {
-                console.log('Email sent: ' + info.response); // ca marche :)
-            }
-        })
+        if(prodMode){
+            await transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.log(error);
+                } else {
+                    console.log('Email sent: ' + info.response); // ca marche :)
+                }
+            })
+        }
     }
+    console.log("number of mails : " + userInfos.length)
 }
 
 module.exports = {sendMails}

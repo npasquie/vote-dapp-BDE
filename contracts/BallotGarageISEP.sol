@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.4;
 
-import "hardhat/console.sol";
-
 contract BallotGarageISEP {
     uint256 constant LEADING = 0;
     uint256 constant MEMBER  = 1;
@@ -15,11 +13,12 @@ contract BallotGarageISEP {
     based on unix epoch */
     bytes32[] public candidateNames; // = [bytes32("JFCope"), bytes32("Fillon"), bytes32("Vote blanc")];
     mapping (bytes32 => uint256[3]) public candidateScores;
+    uint256[3] public expectedNumberOfVoters;
     
 
     /* warning : if many candidates with the same name are sent, last one
     will overwrite the others */
-    constructor(uint256 _startTime, uint256 _endTime, bytes32[] memory _candidateNames) {
+    constructor(uint256 _startTime, uint256 _endTime, bytes32[] memory _candidateNames, uint256[3] memory _expectedNumberOfVoters) {
         require(_startTime < _endTime, "end time of the ballot must be after the start time");
         require(_endTime > block.timestamp, "end time of the ballot must be in the future");
         require(_candidateNames.length >= 2,
@@ -29,6 +28,7 @@ contract BallotGarageISEP {
         startTime = _startTime;
         endTime = _endTime;
         candidateNames = _candidateNames;
+        expectedNumberOfVoters = _expectedNumberOfVoters;
 
         for (uint i = 0; i < candidateNames.length; i++){
             require(candidateNames[i][0] != 0,
@@ -45,23 +45,16 @@ contract BallotGarageISEP {
     }
     
     function getCandidateScore(bytes32 _candidateName) public view returns(uint256){
-        uint256[3] memory numberOfVotesByWeight;
         uint256[3] memory scorePartsByWeight;
-
-        for(uint256 i = 0; i < candidateNames.length; i++){
-            numberOfVotesByWeight[LEADING] += candidateScores[candidateNames[i]][LEADING];
-            numberOfVotesByWeight[MEMBER] += candidateScores[candidateNames[i]][MEMBER];
-            numberOfVotesByWeight[LEAVING] += candidateScores[candidateNames[i]][LEAVING];
-        }
         
-        if (numberOfVotesByWeight[LEADING] > 0)
-            scorePartsByWeight[LEADING] = (ONE * 55 * candidateScores[_candidateName][LEADING]) / (100 * numberOfVotesByWeight[LEADING]);
+        if (expectedNumberOfVoters[LEADING] > 0)
+            scorePartsByWeight[LEADING] = (ONE * 55 * candidateScores[_candidateName][LEADING]) / (100 * expectedNumberOfVoters[LEADING]);
     
-        if (numberOfVotesByWeight[MEMBER] > 0)
-            scorePartsByWeight[MEMBER] = (ONE * 35 * candidateScores[_candidateName][MEMBER]) / (100 * numberOfVotesByWeight[MEMBER]);
+        if (expectedNumberOfVoters[MEMBER] > 0)
+            scorePartsByWeight[MEMBER] = (ONE * 35 * candidateScores[_candidateName][MEMBER]) / (100 * expectedNumberOfVoters[MEMBER]);
 
-        if (numberOfVotesByWeight[LEAVING] > 0)
-            scorePartsByWeight[LEAVING] = (ONE * 10 * candidateScores[_candidateName][LEAVING]) / (100 * numberOfVotesByWeight[LEAVING]);
+        if (expectedNumberOfVoters[LEAVING] > 0)
+            scorePartsByWeight[LEAVING] = (ONE * 10 * candidateScores[_candidateName][LEAVING]) / (100 * expectedNumberOfVoters[LEAVING]);
         
         return(scorePartsByWeight[LEADING] + scorePartsByWeight[MEMBER] + scorePartsByWeight[LEAVING]);
     }
