@@ -10,7 +10,7 @@ const fs = require("fs")
 const mailer = require("./send_emails.js")
 const data = fs.readFileSync('../mailsEtPonderation.csv', 'utf8')
 const HDWalletProvider = require("@truffle/hdwallet-provider");
-const prodMode = true
+const prodMode = false
 
 let nbsOfVoters = generator.generateSecrets(data)
 

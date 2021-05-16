@@ -15,16 +15,17 @@ async function sendMails(subject, candidateNames, userInfos, prodMode){
     })
 
     for (const user of userInfos) {
-        text = `GarageISEP vous invite à participer au vote : ${subject}\n 
-                pour voter, cliquez sur le lien de votre choix, attention, aucune confirmation ne vous sera demandée et le vote est définitif.\n
-                ces liens contiennent votre code votant confidentiel, ne les partagez à personne.\n`
+        text =
+            `GarageISEP vous invite à participer au vote : ${subject}\n 
+            pour voter, cliquez sur le lien de votre choix, attention, aucune confirmation ne vous sera demandée et le vote est définitif.\n
+            ces liens contiennent votre code votant confidentiel, ne les partagez à personne.\n\n`
         candidateNames.forEach(name => {
-            text += name + ` : https://vote.garageisep.com/vote/${name}/${user.code}$\n`
+            text += name + ` : https://vote.garageisep.com/vote/${encodeURIComponent(name)}/${user.code}\n`
         })
         mailOptions = {
             from: mailConfig.from,
             to: user.mail,
-            subject: mailConfig.subject,
+            subject: 'vote-dapp-GarageISEP : votez ! ' + subject,
             text: text
         }
 
