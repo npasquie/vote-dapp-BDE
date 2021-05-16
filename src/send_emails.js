@@ -19,8 +19,7 @@ async function sendMails(subject, candidateNames, userInfos){
                 pour voter, cliquez sur le lien de votre choix, attention, aucune confirmation ne vous sera demandée et le vote est définitif.\n
                 ces liens contiennent votre code votant confidentiel, ne les partagez à personne.\n`
         candidateNames.forEach(name => {
-            // todo : put link
-            text += name + ` : .../vote/${name}/${user.code}$\n`
+            text += name + ` : https://vote.garageisep.com/vote/${name}/${user.code}$\n`
         })
         mailOptions = {
             from: mailConfig.from,
@@ -29,13 +28,13 @@ async function sendMails(subject, candidateNames, userInfos){
             text: text
         }
 
-        // await transporter.sendMail(mailOptions, (error, info) => {
-        //     if (error) {
-        //         console.log(error);
-        //     } else {
-        //         console.log('Email sent: ' + info.response); // ca marche :)
-        //     }
-        // })
+        await transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response); // ca marche :)
+            }
+        })
     }
 }
 
