@@ -1,8 +1,15 @@
 const nodemailer = require("nodemailer");
 const mailConfig = require("./mailConfig.json")
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 async function sendMails(subject, candidateNames, userInfos, prodMode){
-    let mailOptions
+    let mailOptions = {
+        from: mailConfig.from,
+        to: mailConfig.first_email,
+        subject: 'vote-dapp-GarageISEP : votez ! ' + subject,
+        text: 'envoi reussi ?'
+    }
     let text
     let transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -13,6 +20,23 @@ async function sendMails(subject, candidateNames, userInfos, prodMode){
             pass: mailConfig.pass,
         }
     })
+
+    let noSuccessYet = true
+
+    if(prodMode){
+        while (noSuccessYet) {
+            await transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.log(error);
+                    console.log("will retry to send a mail shortly ...")
+                } else {
+                    noSuccessYet = false
+                    console.log('Email sent: ' + info.response); // ca marche :)
+                }
+            })
+            await delay(1500)
+        }
+    }
 
     for (const user of userInfos) {
         text =
@@ -28,6 +52,7 @@ async function sendMails(subject, candidateNames, userInfos, prodMode){
         }
 
         if(prodMode){
+            await delay(1500)
             await transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {
                     console.log(error);

@@ -1,3 +1,5 @@
+const fs = require("fs")
+
 function generateSecrets(data){
     const LEADING = 0, MEMBER = 1, LEAVING = 2 // enum-like in js
     let mail, weighting, tempUserStruct, tempCode, tempWeightCode
@@ -27,6 +29,10 @@ function generateSecrets(data){
         tempUserStruct = {mail: mail, code: tempCode, weightCode: tempWeightCode}
         if(mail !== '') // prevent last empty line to generate a possible vote
             allUsersData.push(tempUserStruct)
+    })
+    fs.writeFileSync('users_mails_and_codes.json', JSON.stringify(allUsersData,undefined,' ') , (err, data) => {
+        if (err)
+            console.error('ecriture du fichier a echoue ' + err)
     })
         console.log('secrets file generated')
     return {nbsOfVoters: nbsOfVoters, allUsersData:allUsersData}

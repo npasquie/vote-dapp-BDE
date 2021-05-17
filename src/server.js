@@ -12,8 +12,6 @@ const data = fs.readFileSync('../mailsEtPonderation.csv', 'utf8')
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const prodMode = false
 
-let {nbsOfVoters,allUsersData} = generator.generateSecrets(data)
-
 async function main(){
     let provider = prodMode ? new HDWalletProvider(chainInfo.private_key, chainInfo.rinkeby) : "http://localhost:8545"
     let signerAccount
@@ -28,26 +26,59 @@ async function main(){
     let candidateNames = []
     let voteDuration
     let voteSubject
+    let recoveryMode = false
+    let recoveryData = {
+        codesThatVoted: [],
+        candidateNames: [],
+        ballotAddress: '',
+        nowTimestamp: 0,
+        voteDuration: 0
+    }
 
     process.argv.forEach((val, index) => {
         if(index > 1){
             if(index === 2) {
+                if (val === 'recovery')
+                    recoveryMode = true
                 voteDuration = parseInt(val)
+                recoveryData.nowTimestamp = nowTimestamp
             } else if (index === 3) {
                 voteSubject = val
+                recoveryData.voteSubject = voteSubject
             } else {
                 candidateNames.push(val)
             }
         }
     })
-    let candidatesArg = []
-    let userInfos = allUsersData
 
-    candidateNames.forEach(name => candidatesArg.push(utils.strToBytes32(name,web3)))
-    let ballot = await utils.deployContract(ballotJSON,signerAccount,web3,[nowTimestamp, nowTimestamp + voteDuration, candidatesArg, nbsOfVoters])
+    let nbsOfVoters,allUsersData
+    let obj
+    let userInfos
+    let candidatesArg = []
+    let ballot
     let codesThatVoted = []
 
-    await mailer.sendMails(voteSubject,candidateNames,userInfos,prodMode)
+    if(!recoveryMode) { // procedures so server can be relaunched after a stop
+        recoveryData.candidateNames = candidateNames
+        recoveryData.codesThatVoted = codesThatVoted
+        obj = generator.generateSecrets(data)
+        nbsOfVoters = obj.nbsOfVoters
+        allUsersData = obj.allUsersData
+        userInfos = allUsersData
+        candidateNames.forEach(name => candidatesArg.push(utils.strToBytes32(name,web3)))
+        recoveryData.voteDuration = voteDuration
+        ballot = await utils.deployContract(ballotJSON,signerAccount,web3,[nowTimestamp, nowTimestamp + voteDuration, candidatesArg, nbsOfVoters])
+        recoveryData.ballotAddress = ballot.options.address
+        await mailer.sendMails(voteSubject,candidateNames,userInfos,prodMode)
+        fs.writeFileSync('recovery.json',JSON.stringify(recoveryData))
+    } else {
+        userInfos = JSON.parse(fs.readFileSync('users_mails_and_codes.json'))
+        recoveryData = JSON.parse(fs.readFileSync('recovery.json'))
+        candidateNames = recoveryData.candidateNames
+        codesThatVoted = recoveryData.codesThatVoted
+        voteDuration = recoveryData.voteDuration
+        ballot = await new web3.eth.Contract(ballotJSON.abi,recoveryData.ballotAddress)
+    }
 
     app.get('/results', async (req, res) => {
         let scores = []
@@ -80,13 +111,15 @@ async function main(){
             res.send('vous avez déjà voté, vous ne pouvez pas voter à nouveau.')
             return
         }
-        codesThatVoted.push(user.code)
         try {
             receipt = await utils.sendContrFunc(ballot.methods.vote(utils.strToBytes32(vote,web3),parseInt(user.weightCode)),signerAccount)
             res.send('Vote envoyé à la blockchain. <br>\n pour consulter la transaction : https://rinkeby.etherscan.io/tx/' + receipt.transactionHash)
+            codesThatVoted.push(user.code)
         } catch (err) {
             res.send('error : ' + err)
         }
+        recoveryData.codesThatVoted = codesThatVoted
+        fs.writeFileSync('recovery.json',JSON.stringify(recoveryData,undefined,' '))
     })
 
     app.listen(port, () => {
