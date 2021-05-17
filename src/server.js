@@ -77,6 +77,7 @@ async function main(){
         candidateNames = recoveryData.candidateNames
         codesThatVoted = recoveryData.codesThatVoted
         voteDuration = recoveryData.voteDuration
+        voteSubject = recoveryData.voteSubject
         ballot = await new web3.eth.Contract(ballotJSON.abi,recoveryData.ballotAddress)
     }
 
